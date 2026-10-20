@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Gelişmiş Şifre Çözme</title>
+<style>
+body.gl-en .g-tr{display:none}
+body.gl-tr .g-en{display:none}
+#glBtn span{padding:4px 8px;border-radius:5px;opacity:.5}
+body.gl-en #glBtn .en,body.gl-tr #glBtn .tr{background:#555;opacity:1}
+</style>
+</head>
+
+<body class="gl-en" style="background:#111;color:white;font-family:Arial;text-align:center;padding:40px;">
+
+<!-- Köşe geçiş butonu -->
+<div id="toggleBtn" onclick="toggleMode()"
+    style="position:fixed;top:16px;right:16px;cursor:pointer;background:#333;border:1px solid #555;border-radius:8px;padding:8px 14px;font-size:18px;z-index:999;user-select:none;"
+    title="Türkçe alfabeye geç">
+    🇹🇷
+</div>
+
+<!-- Rehber dili / Guide language -->
+<div id="glBtn" onclick="toggleGuideLang()" title="Guide language / Rehber dili"
+    style="position:fixed;top:16px;left:16px;cursor:pointer;background:#333;border:1px solid #555;border-radius:8px;padding:4px;font-size:13px;z-index:999;user-select:none;">
+    📖 <span class="en">EN</span><span class="tr">TR</span>
+</div>
+
+<!-- İngilizce Ekran -->
+<div id="englishScreen">
+
+<h2 data-en="Cipher Decoder System">Şifre Çözme Sistemi</h2>
+
+<textarea id="cipherText" placeholder="Şifreli mesaj gir" data-en-ph="Enter cipher text" rows="4" style="width:60%;padding:8px;font-size:14px;background:#222;color:white;border:1px solid #555;border-radius:4px;resize:vertical;"></textarea>
+<br><br>
+
+<button onclick="startProcess()" data-en="Start">Başla</button>
+
+<br><br>
+
+<!-- Yöntem Seçim Ekranı -->
+<div id="methodArea" style="display:none;">
+    <p data-en="Which method do you want to use?">Hangi yöntemi kullanmak istiyorsun?</p>
+    <button onclick="selectMethod('atbash')">🔁 Atbash (!)</button>
+    &nbsp;
+    <button onclick="selectMethod('caesar')">🔢 Caesar (?S)</button>
+    &nbsp;
+    <button onclick="selectMethod('vigenere')">🔑 Vigenère (&)</button>
+    &nbsp;
+    <button onclick="selectMethod('a1z26encode')" data-en="🔢 A1Z26 Encode (%)">🔢 A1Z26 Oluştur (%)</button>
+    &nbsp;
+    <button onclick="selectMethod('polybius')">🔲 Polybius</button>
+</div>
+
+<!-- Caesar Alanı -->
+<div id="shiftArea" style="display:none;">
+    <br>
+    <input type="number" id="shiftValue" placeholder="S değeri (1-25)" data-en-ph="S value (1-25)" min="1" max="25">
+    <br><br>
+    <button onclick="applyCaesar('decode')" data-en="🔓 Decode (S letters back)">🔓 Çöz (S harf geri)</button>
+    &nbsp;
+    <button onclick="applyCaesar('encode')" data-en="🔒 Encode (S letters forward)">🔒 Oluştur (S harf ileri)</button>
+</div>
+
+<!-- Vigenère Alanı -->
+<div id="vigenereArea" style="display:none;">
+    <br>
+    <input type="text" id="vigenereKey" placeholder="Anahtar kelime gir (sadece harf)" data-en-ph="Enter keyword (letters only)">
+    <br><br>
+    <button onclick="applyVigenere('decode')" data-en="🔓 Decode">🔓 Çöz</button>
+    &nbsp;
+    <button onclick="applyVigenere('encode')" data-en="🔒 Encode">🔒 Oluştur</button>
+</div>
+
+<!-- Polybius Alanı -->
+<div id="polybiusArea" style="display:none;">
+    <br>
+    <p style="color:#aaa;margin:4px 0;" data-en="Choose Polybius method:">Polybius yöntemi seç:</p>
+    <button onclick="selectPolybiusMethod('basic')" data-en="📍 Basic (+)">📍 Temel (+)</button>
+    &nbsp;
+    <button onclick="selectPolybiusMethod('method1')" data-en="1️⃣ Method 1 (-)">1️⃣ Yöntem 1 (-)</button>
+    &nbsp;
+    <button onclick="selectPolybiusMethod('bifid')" data-en="2️⃣ Method 2 (xS)">2️⃣ Yöntem 2 (xS)</button>
+    &nbsp;
+    <button onclick="selectPolybiusMethod('method3')" data-en="3️⃣ Method 3 (½S)">3️⃣ Yöntem 3 (½S)</button>
+</div>
+
+<!-- Polybius Temel -->
+<div id="polybiusBasicArea" style="display:none;">
+    <br>
+    <button onclick="applyPolybius('encode')" data-en="🔒 Encode (letter → number)">🔒 Oluştur (harf → sayı)</button>
+    &nbsp;
+    <button onclick="applyPolybius('decode')" data-en="🔓 Decode (number → letter)">🔓 Çöz (sayı → harf)</button>
+</div>
+
+<!-- Polybius Yöntem 1 -->
+<div id="polybiusMethod1Area" style="display:none;">
+    <br>
+    <input type="number" id="polybiusShift" placeholder="S değeri (1-4)" data-en-ph="S value (1-4)" min="1" max="4">
+    <br><br>
+    <button onclick="applyPolybiusMethod1('encode')" data-en="🔒 Encode">🔒 Oluştur</button>
+    &nbsp;
+    <button onclick="applyPolybiusMethod1('decode')" data-en="🔓 Decode">🔓 Çöz</button>
+</div>
+
+<!-- Polybius Yöntem 2 (Bifid) -->
+<div id="polybiusBifidArea" style="display:none;">
+    <br>
+    <button onclick="applyBifid('encode')" data-en="🔒 Encode">🔒 Oluştur</button>
+    &nbsp;
+    <button onclick="applyBifid('decode')" data-en="🔓 Decode">🔓 Çöz</button>
+</div>
+
+<!-- Polybius Yöntem 3 (Bifid + Kaydırma) -->
+<div id="polybiusMethod3Area" style="display:none;">
+    <br>
+    <input type="number" id="method3Shift" placeholder="S değeri (kaydırma adımı)" data-en-ph="S value (shift steps)" min="1">
+    <br><br>
+    <button onclick="applyMethod3('encode')" data-en="🔒 Encode">🔒 Oluştur</button>
+    &nbsp;
+    <button onclick="applyMethod3('decode')" data-en="🔓 Decode">🔓 Çöz</button>
+</div>
+
+<br>
+<div id="output"></div>
+
+<br>
+<!-- Polybius Rehberi -->
+<div id="polybiusGuide" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+<div class="g-tr">
+    <b style="color:white;">📖 Polybius Rehberi</b>
+    <br><br>
+    <b style="color:#ddd;">📍 Temel <span style="font-weight:normal; color:#888;">(harf ↔ koordinat)</span></b>
+    <ul>
+        <li>Her harfi Polybius karesindeki koordinatına (satır-sütun) dönüştürür. Örn: S → 43</li>
+        <li>Metnin başına <b style="color:white;">ğ</b> eklenirse koordinat sırası tersine döner (y,x). Örn: S → 34</li>
+        <li>Metnin sonuna <b style="color:white;">ğ</b> eklenirse baştaki ğ iptal edilir.</li>
+    </ul>
+    <b style="color:#ddd;">1️⃣ Yöntem 1 <span style="font-weight:normal; color:#888;">(Caesar kaydırmalı)</span></b>
+    <ul>
+        <li>Her harf, aynı sütunda S satır aşağıdaki (veya yukarıdaki) harfle değiştirilir.</li>
+        <li>Metnin başına <b style="color:white;">ğ</b> eklenirse satır değil sütun bazlı kaydırma yapılır.</li>
+        <li>Metnin sonuna <b style="color:white;">ğ</b> eklenirse baştaki ğ iptal edilir.</li>
+    </ul>
+    <b style="color:#ddd;">2️⃣ Yöntem 2 — Bifid <span style="font-weight:normal; color:#888;">(koordinat karıştırma)</span></b>
+    <ul>
+        <li>Tüm harflerin satır koordinatları, ardından sütun koordinatları arka arkaya yazılır.</li>
+        <li>Oluşan dizi ikili gruplara bölünüp tabloya göre yeni harflere dönüştürülür.</li>
+        <li>Metnin sonuna <b style="color:white;">ğ</b> eklenirse baştaki ğ (varsa) iptal edilir.</li>
+    </ul>
+    <b style="color:#ddd;">3️⃣ Yöntem 3 — Bifid + Kaydırma <span style="font-weight:normal; color:#888;">(gelişmiş varyasyon)</span></b>
+    <ul>
+        <li>Önce Bifid uygulanır, çıkan metnin koordinat dizisi S adım sola kaydırılır, ardından tekrar harfe dönüştürülür.</li>
+        <li>Metnin başına <b style="color:white;">ğ</b> eklenirse 1. aşamada (y,x) koordinat sırası kullanılır.</li>
+        <li>Metnin başına <b style="color:white;">ğğ</b> eklenirse 2. aşamada (y,x) koordinat sırası kullanılır.</li>
+        <li>Metnin başına <b style="color:white;">ğğğ</b> eklenirse her iki aşamada da (y,x) koordinat sırası kullanılır.</li>
+        <li>Sondaki her <b style="color:white;">ğ</b>, baştaki bir ğ'yi iptal eder. Örn: ğğğhelloğğ = ğhello</li>
+    </ul>
+    <b style="color:#ddd;">🔤 Genel Notlar</b>
+    <ul>
+        <li>I ve J harfi aynı koordinatı (24) kullanır; çözümde her zaman I olarak döner.</li>
+        <li>Polybius karesi: ABCDE / FGHIK / LMNOP / QRSTU / VWXYZ</li>
+    </ul>
+</div>
+<div class="g-en">
+    <b style="color:white;">📖 Polybius Guide</b>
+    <br><br>
+    <b style="color:#ddd;">📍 Basic <span style="font-weight:normal; color:#888;">(letter ↔ coordinate)</span></b>
+    <ul>
+        <li>Converts each letter to its coordinate (row-column) in the Polybius square. E.g. S → 43</li>
+        <li>If <b style="color:white;">ğ</b> is added at the start of the text, the coordinate order is reversed (y,x). E.g. S → 34</li>
+        <li>If <b style="color:white;">ğ</b> is added at the end of the text, the leading ğ is cancelled.</li>
+    </ul>
+    <b style="color:#ddd;">1️⃣ Method 1 <span style="font-weight:normal; color:#888;">(Caesar shift)</span></b>
+    <ul>
+        <li>Each letter is replaced by the letter S rows below (or above) it in the same column.</li>
+        <li>If <b style="color:white;">ğ</b> is added at the start of the text, the shift is done by column instead of by row.</li>
+        <li>If <b style="color:white;">ğ</b> is added at the end of the text, the leading ğ is cancelled.</li>
+    </ul>
+    <b style="color:#ddd;">2️⃣ Method 2 — Bifid <span style="font-weight:normal; color:#888;">(coordinate mixing)</span></b>
+    <ul>
+        <li>The row coordinates of all letters are written first, followed by all the column coordinates.</li>
+        <li>The resulting digit string is split into pairs and converted back to new letters using the square.</li>
+        <li>If <b style="color:white;">ğ</b> is added at the end of the text, the leading ğ (if any) is cancelled.</li>
+    </ul>
+    <b style="color:#ddd;">3️⃣ Method 3 — Bifid + Shift <span style="font-weight:normal; color:#888;">(advanced variation)</span></b>
+    <ul>
+        <li>Bifid is applied first, then the coordinate string of the result is shifted S steps to the left and converted back to letters.</li>
+        <li>If <b style="color:white;">ğ</b> is added at the start, the (y,x) coordinate order is used in stage 1.</li>
+        <li>If <b style="color:white;">ğğ</b> is added at the start, the (y,x) coordinate order is used in stage 2.</li>
+        <li>If <b style="color:white;">ğğğ</b> is added at the start, the (y,x) coordinate order is used in both stages.</li>
+        <li>Each trailing <b style="color:white;">ğ</b> cancels one leading ğ. E.g. ğğğhelloğğ = ğhello</li>
+    </ul>
+    <b style="color:#ddd;">🔤 General Notes</b>
+    <ul>
+        <li>I and J share the same coordinate (24); when decoding, the result is always I.</li>
+        <li>Polybius square: ABCDE / FGHIK / LMNOP / QRSTU / VWXYZ</li>
+    </ul>
+</div>
+</div>
+
+<!-- Atbash Rehberi -->
+<div id="atbashGuide" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+<div class="g-tr">
+    <b style="color:white;">📖 Atbash Rehberi</b>
+    <ul>
+        <li>Alfabenin ilk harfi son harfle, ikinci harfi sondan ikinci harfle eşleştirilir. Örn: A↔Z, B↔Y, C↔X…</li>
+        <li>Hem şifreleme hem de çözme için aynı işlem uygulanır — yöntemin kendi tersidir.</li>
+        <li>Yalnızca İngilizce harfler işlenir; boşluk ve diğer karakterler aynen korunur.</li>
+    </ul>
+</div>
+<div class="g-en">
+    <b style="color:white;">📖 Atbash Guide</b>
+    <ul>
+        <li>The first letter of the alphabet is paired with the last, the second with the second-to-last, and so on. E.g. A↔Z, B↔Y, C↔X…</li>
+        <li>The same operation is used for both encoding and decoding — the method is its own inverse.</li>
+        <li>Only English letters are processed; spaces and other characters are kept as they are.</li>
+    </ul>
+</div>
+</div>
+
+<!-- Caesar Rehberi -->
+<div id="caesarGuide" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+<div class="g-tr">
+    <b style="color:white;">📖 Caesar Rehberi</b>
+    <ul>
+        <li>Her harf alfabede S adım ileri (oluştur) veya geri (çöz) kaydırılır.</li>
+        <li>S=3 ile <b style="color:white;">Oluştur</b>: A→D, B→E, Z→C (alfabenin sonunda başa döner).</li>
+        <li>S=3 ile <b style="color:white;">Çöz</b>: D→A, E→B, C→Z.</li>
+        <li>S değeri 1-25 arasında olmalıdır. S=13 özel bir durumdur (ROT13 — çözme ve oluşturma aynıdır).</li>
+    </ul>
+</div>
+<div class="g-en">
+    <b style="color:white;">📖 Caesar Guide</b>
+    <ul>
+        <li>Each letter is shifted S steps forward (encode) or backward (decode) in the alphabet.</li>
+        <li>With S=3 <b style="color:white;">Encode</b>: A→D, B→E, Z→C (wraps around at the end of the alphabet).</li>
+        <li>With S=3 <b style="color:white;">Decode</b>: D→A, E→B, C→Z.</li>
+        <li>S must be between 1 and 25. S=13 is a special case (ROT13 — encoding and decoding are identical).</li>
+    </ul>
+</div>
+</div>
+
+<!-- Vigenère Rehberi -->
+<div id="vigenereGuide" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+<div class="g-tr">
+    <b style="color:white;">📖 Vigenère Rehberi</b>
+    <ul>
+        <li>Caesar'dan farklı olarak her harf için farklı bir kaydırma değeri kullanılır; bu değerleri anahtar kelime belirler.</li>
+        <li>Anahtar kelime metnin üzerinde döngüsel olarak tekrarlanır. Örn: anahtar KEY ise K=10, E=4, Y=24 adım kaydırılır.</li>
+        <li>Anahtar kelime ne kadar uzun ve tahmin edilemez olursa şifre o kadar güçlü olur.</li>
+        <li>Anahtar kelime sadece İngilizce harf içermelidir.</li>
+    </ul>
+</div>
+<div class="g-en">
+    <b style="color:white;">📖 Vigenère Guide</b>
+    <ul>
+        <li>Unlike Caesar, a different shift is used for each letter; the keyword determines these shifts.</li>
+        <li>The keyword is repeated cyclically over the text. E.g. with key KEY, the shifts are K=10, E=4, Y=24.</li>
+        <li>The longer and less predictable the keyword, the stronger the cipher.</li>
+        <li>The keyword must contain only English letters.</li>
+    </ul>
+</div>
+</div>
+
+<!-- A1Z26 Rehberi -->
+<div id="a1z26Guide" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+<div class="g-tr">
+    <b style="color:white;">📖 A1Z26 Rehberi</b>
+    <ul>
+        <li>Her harf alfabedeki sıra numarasıyla temsil edilir: A=1, B=2 … Z=26.</li>
+        <li>Harfler arasını ayırmak için <b style="color:white;">tire (-)</b>, kelimeleri ayırmak için <b style="color:white;">boşluk</b> kullan. Örn: HELLO → 8-5-12-12-15</li>
+        <li>Sayı girişi otomatik olarak A1Z26 ile çözülür, yöntem seçimine gerek yoktur.</li>
+        <li>26'dan büyük sayılar modulo 26 ile işlenir. Örn: 32 → 6 → F</li>
+    </ul>
+</div>
+<div class="g-en">
+    <b style="color:white;">📖 A1Z26 Guide</b>
+    <ul>
+        <li>Each letter is represented by its position in the alphabet: A=1, B=2 … Z=26.</li>
+        <li>Use a <b style="color:white;">hyphen (-)</b> to separate letters and a <b style="color:white;">space</b> to separate words. E.g. HELLO → 8-5-12-12-15</li>
+        <li>Numeric input is automatically decoded with A1Z26; no method selection is needed.</li>
+        <li>Numbers greater than 26 are handled with modulo 26. E.g. 32 → 6 → F</li>
+    </ul>
+</div>
+</div>
+
+</div> <!-- /englishScreen -->
+
+<!-- Türkçe Caesar Ekranı -->
+<div id="turkishScreen" style="display:none;">
+
+<h2>Türkçe Şifre Sistemi</h2>
+
+<textarea id="cipherTextTR" placeholder="Mesajı gir" rows="4"
+    style="width:60%;padding:8px;font-size:14px;background:#222;color:white;border:1px solid #555;border-radius:4px;resize:vertical;"></textarea>
+
+<br><br>
+
+<button onclick="startProcessTR()">Başla</button>
+
+<br><br>
+
+<!-- Türkçe Yöntem Seçim -->
+<div id="methodAreaTR" style="display:none;">
+    <p>Hangi yöntemi kullanmak istiyorsun?</p>
+    <button onclick="selectMethodTR('atbash')">🔁 Atbash (!)</button>
+    &nbsp;
+    <button onclick="selectMethodTR('caesar')">🔢 Caesar (?S)</button>
+    &nbsp;
+    <button onclick="selectMethodTR('vigenere')">🔑 Vigenère (&)</button>
+    &nbsp;
+    <button onclick="selectMethodTR('a1z29encode')">🔢 A1Z29 Oluştur (%)</button>
+    &nbsp;
+    <button onclick="selectMethodTR('polybiusTR')">🔲 Polybius ver.:TR</button>
+</div>
+
+<!-- Türkçe Vigenère Alanı -->
+<div id="vigenereAreaTR" style="display:none;">
+    <br>
+    <input type="text" id="vigenereKeyTR" placeholder="Anahtar kelime gir (Türkçe harf)"
+        style="padding:6px;background:#222;color:white;border:1px solid #555;border-radius:4px;">
+    <br><br>
+    <button onclick="applyVigenereTR('decode')">🔓 Çöz</button>
+    &nbsp;
+    <button onclick="applyVigenereTR('encode')">🔒 Oluştur</button>
+</div>
+
+<!-- Türkçe Caesar Alanı -->
+<div id="shiftAreaTR" style="display:none;">
+    <br>
+    <input type="number" id="shiftValueTR" placeholder="S değeri (1-28)" min="1" max="28"
+        style="padding:6px;background:#222;color:white;border:1px solid #555;border-radius:4px;">
+    <br><br>
+    <button onclick="applyCaesarTR('decode')">🔓 Çöz (S harf geri)</button>
+    &nbsp;
+    <button onclick="applyCaesarTR('encode')">🔒 Oluştur (S harf ileri)</button>
+</div>
+
+<br>
+<div id="outputTR"></div>
+
+<br>
+
+<!-- Türkçe Atbash Rehberi -->
+<div id="atbashGuideTR" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+    <b style="color:white;">📖 Türkçe Atbash Rehberi</b>
+    <ul>
+        <li>Türkçe alfabenin 29 harfi tersine eşleştirilir: A↔Z, B↔Y, C↔V, Ç↔Ü…</li>
+        <li>Hem şifreleme hem de çözme için aynı işlem uygulanır — yöntemin kendi tersidir.</li>
+        <li>Q, W, X ve diğer karakterler aynen korunur.</li>
+    </ul>
+</div>
+
+<!-- Türkçe Caesar Rehberi -->
+<div id="caesarGuideTR" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+    <b style="color:white;">📖 Türkçe Caesar Rehberi</b>
+    <ul>
+        <li>Türkçe alfabenin 29 harfini kullanır: A B C Ç D E F G Ğ H I İ J K L M N O Ö P R S Ş T U Ü V Y Z</li>
+        <li>Q, W, X harfleri işlenmez, oldukları gibi bırakılır.</li>
+        <li>S değeri 1-28 arasında olmalıdır. S=3 ile A→Ç, B→D, Z→C gibi kaydırma yapılır.</li>
+        <li>Büyük/küçük harf ayrımı korunur.</li>
+    </ul>
+</div>
+
+<!-- Türkçe Vigenère Rehberi -->
+<div id="vigenereGuideTR" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+    <b style="color:white;">📖 Türkçe Vigenère Rehberi</b>
+    <ul>
+        <li>Her harf için kaydırma miktarını Türkçe anahtar kelime belirler: A=0, B=1, C=2, Ç=3… Z=28.</li>
+        <li>Anahtar kelime metnin üzerinde döngüsel olarak tekrarlanır.</li>
+        <li>Anahtar kelime Türkçe harf içermelidir (Q, W, X kabul edilmez).</li>
+        <li>Anahtar ne kadar uzun ve rastgele olursa şifre o kadar güçlü olur.</li>
+    </ul>
+</div>
+
+<!-- Türkçe A1Z29 Rehberi -->
+<div id="a1z29GuideTR" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+    <b style="color:white;">📖 A1Z29 Rehberi</b>
+    <ul>
+        <li>Her harf Türkçe alfabedeki sıra numarasıyla temsil edilir: A=1, B=2, C=3, Ç=4 … Z=29.</li>
+        <li>Harfler arasını ayırmak için <b style="color:white;">tire (-)</b>, kelimeleri ayırmak için <b style="color:white;">boşluk</b> kullan.</li>
+        <li>Sayı girişi (sadece rakam ve tire) otomatik olarak A1Z29 ile çözülür.</li>
+        <li>29'dan büyük sayılar modulo 29 ile işlenir.</li>
+    </ul>
+</div>
+
+<!-- Türkçe Polybius Alt Yöntem Seçimi -->
+<div id="polybiusAreaTR" style="display:none;">
+    <br>
+    <p style="color:#aaa;margin:4px 0;">Polybius ver.:TR yöntemi seç:</p>
+    <button onclick="selectPolybiusMethodTR('basic')">📍 Temel (+)</button>
+    &nbsp;
+    <button onclick="selectPolybiusMethodTR('method1')">1️⃣ Yöntem 1 (-)</button>
+    &nbsp;
+    <button onclick="selectPolybiusMethodTR('bifid')">2️⃣ Yöntem 2 (xS)</button>
+    &nbsp;
+    <button onclick="selectPolybiusMethodTR('method3')">3️⃣ Yöntem 3 (½S)</button>
+</div>
+
+<!-- Türkçe Polybius Temel -->
+<div id="polybiusBasicAreaTR" style="display:none;">
+    <br>
+    <button onclick="applyPolybiusTR('encode')">🔒 Oluştur (harf → sayı)</button>
+    &nbsp;
+    <button onclick="applyPolybiusTR('decode')">🔓 Çöz (sayı → harf)</button>
+</div>
+
+<!-- Türkçe Polybius Yöntem 1 -->
+<div id="polybiusMethod1AreaTR" style="display:none;">
+    <br>
+    <input type="number" id="polybiusShiftTR" placeholder="S değeri (1-4)" min="1" max="4"
+        style="padding:6px;background:#222;color:white;border:1px solid #555;border-radius:4px;">
+    <br><br>
+    <button onclick="applyPolybiusMethod1TR('encode')">🔒 Oluştur</button>
+    &nbsp;
+    <button onclick="applyPolybiusMethod1TR('decode')">🔓 Çöz</button>
+</div>
+
+<!-- Türkçe Polybius Yöntem 2 (Bifid) -->
+<div id="polybiusBifidAreaTR" style="display:none;">
+    <br>
+    <button onclick="applyBifidTR('encode')">🔒 Oluştur</button>
+    &nbsp;
+    <button onclick="applyBifidTR('decode')">🔓 Çöz</button>
+</div>
+
+<!-- Türkçe Polybius Yöntem 3 -->
+<div id="polybiusMethod3AreaTR" style="display:none;">
+    <br>
+    <input type="number" id="method3ShiftTR" placeholder="S değeri (kaydırma adımı)" min="1"
+        style="padding:6px;background:#222;color:white;border:1px solid #555;border-radius:4px;">
+    <br><br>
+    <button onclick="applyMethod3TR('encode')">🔒 Oluştur</button>
+    &nbsp;
+    <button onclick="applyMethod3TR('decode')">🔓 Çöz</button>
+</div>
+
+<!-- Türkçe Polybius Rehberi -->
+<div id="polybiusGuideTR" style="display:none; text-align:left; max-width:600px; margin:0 auto; background:#1a1a1a; border:1px solid #333; border-radius:6px; padding:16px; font-size:13px; color:#bbb;">
+    <b style="color:white;">📖 Polybius ver.:TR Rehberi</b>
+    <br><br>
+    <b style="color:#ddd;">📍 Temel <span style="font-weight:normal; color:#888;">(harf ↔ koordinat)</span></b>
+    <ul>
+        <li>5x6 kare kullanılır (30 hücre, 29 harf + 1 boş). Koordinatlar satır(1-5) + sütun(1-6) şeklindedir.</li>
+    </ul>
+    <b style="color:#ddd;">1️⃣ Yöntem 1 <span style="font-weight:normal; color:#888;">(Caesar kaydırmalı)</span></b>
+    <ul>
+        <li>Her harf aynı sütunda S satır aşağıdaki harfle değiştirilir (max S=4).</li>
+    </ul>
+    <b style="color:#ddd;">2️⃣ Yöntem 2 <span style="font-weight:normal; color:#888;">(Bifid)</span></b>
+    <ul>
+        <li>Satır koordinatları ardından sütun koordinatları yazılır, ikili gruplara bölünüp harfe çevrilir.</li>
+    </ul>
+    <b style="color:#ddd;">3️⃣ Yöntem 3 <span style="font-weight:normal; color:#888;">(Bifid + Kaydırma)</span></b>
+    <ul>
+        <li>Bifid sonucu koordinat dizisine çevrilir, S adım sola kaydırılır, tekrar harfe dönüştürülür.</li>
+    </ul>
+    <b style="color:#ddd;">🔤 Türkçe Polybius Karesi (5x6)</b>
+    <ul>
+        <li>A B C Ç D E / F G Ğ H I İ / J K L M N O / Ö P R S Ş T / U Ü V Y Z _</li>
+        <li>I ve İ ayrı harfler olarak işlenir. Son hücre (56) boştur.</li>
+    </ul>
+</div>
+
+</div> <!-- /turkishScreen -->
+
+<script>
+
+// Türkçe alfabe
+const trAlphabet = ['A','B','C','Ç','D','E','F','G','Ğ','H','I','İ','J','K','L','M','N','O','Ö','P','R','S','Ş','T','U','Ü','V','Y','Z'];
+const trAlphabetLower = trAlphabet.map(c => c.toLowerCase());
+
+function isNumbersOnlyTR(text){
+    return /^[0-9\s\-]+$/.test(text);
+}
+
+function hideAllTR(){
+    document.getElementById("shiftAreaTR").style.display = "none";
+    document.getElementById("vigenereAreaTR").style.display = "none";
+    document.getElementById("polybiusAreaTR").style.display = "none";
+    document.getElementById("polybiusBasicAreaTR").style.display = "none";
+    document.getElementById("polybiusMethod1AreaTR").style.display = "none";
+    document.getElementById("polybiusBifidAreaTR").style.display = "none";
+    document.getElementById("polybiusMethod3AreaTR").style.display = "none";
+    document.getElementById("polybiusGuideTR").style.display = "none";
+    document.getElementById("methodAreaTR").style.display = "none";
+    document.getElementById("atbashGuideTR").style.display = "none";
+    document.getElementById("caesarGuideTR").style.display = "none";
+    document.getElementById("vigenereGuideTR").style.display = "none";
+    document.getElementById("a1z29GuideTR").style.display = "none";
+}
+
+function startProcessTR(){
+    let input = document.getElementById("cipherTextTR").value.trim();
+    let output = document.getElementById("outputTR");
+    hideAllTR();
+    if(input === ""){ output.innerText = "Mesaj gir."; return; }
+
+    // Sayı girişi → otomatik A1Z29 çöz
+    if(isNumbersOnlyTR(input)){
+        let result = a1z29decode(input);
+        output.innerHTML = "🔢 A1Z29 sonucu: <b>" + result + "</b><br><br>✔ Mesaj çözüldü.";
+        document.getElementById("a1z29GuideTR").style.display = "block";
+        return;
+    }
+
+    output.innerText = "";
+    document.getElementById("methodAreaTR").style.display = "block";
+}
+
+function selectMethodTR(method){
+    hideAllTR();
+    let input = document.getElementById("cipherTextTR").value.trim();
+    let output = document.getElementById("outputTR");
+
+    if(method === 'atbash'){
+        let result = atbashTR(input);
+        output.innerHTML = "🔁 Atbash sonucu: <b>" + result + "</b>";
+        document.getElementById("atbashGuideTR").style.display = "block";
+
+    } else if(method === 'caesar'){
+        document.getElementById("shiftAreaTR").style.display = "block";
+        document.getElementById("caesarGuideTR").style.display = "block";
+        output.innerText = "S değerini gir ve işlem seç.";
+
+    } else if(method === 'vigenere'){
+        document.getElementById("vigenereAreaTR").style.display = "block";
+        document.getElementById("vigenereGuideTR").style.display = "block";
+        output.innerText = "Anahtar kelimeyi gir ve işlem seç.";
+
+    } else if(method === 'polybiusTR'){
+        document.getElementById("polybiusAreaTR").style.display = "block";
+        document.getElementById("polybiusGuideTR").style.display = "block";
+        output.innerText = "Polybius ver.:TR yöntemini seç.";
+
+    } else if(method === 'a1z29encode'){
+        let result = a1z29encode(input);
+        output.innerHTML = "🔢 A1Z29 sonucu: <b>" + result + "</b><br><br>✔ Şifre oluşturuldu.";
+        document.getElementById("a1z29GuideTR").style.display = "block";
+    }
+}
+
+function vigenereTR(text, key, mode){
+    // Anahtarı Türkçe harflere göre filtrele
+    let keyLetters = Array.from(key.toUpperCase()).filter(c => trAlphabet.includes(c));
+    if(keyLetters.length === 0) return null;
+    let n = trAlphabet.length;
+    let keyIndex = 0;
+    let result = '';
+    for(let ch of text){
+        let idxU = trAlphabet.indexOf(ch.toUpperCase());
+        if(idxU !== -1){
+            let shift = trAlphabet.indexOf(keyLetters[keyIndex % keyLetters.length]);
+            if(mode === 'decode') shift = -shift;
+            let newIdx = ((idxU + shift) % n + n) % n;
+            // Büyük/küçük harf koru
+            result += trAlphabet.includes(ch) ? trAlphabet[newIdx] : trAlphabetLower[newIdx];
+            keyIndex++;
+        } else {
+            result += ch;
+        }
+    }
+    return result;
+}
+
+function applyVigenereTR(mode){
+    let input = document.getElementById("cipherTextTR").value;
+    let key = document.getElementById("vigenereKeyTR").value.trim();
+    let output = document.getElementById("outputTR");
+    if(key === ""){ output.innerText = "Anahtar kelime gir."; return; }
+    let result = vigenereTR(input, key, mode);
+    if(result === null){ output.innerText = "Anahtar kelime geçerli Türkçe harf içermelidir."; return; }
+    let label = (mode === 'encode') ? "🔒 Oluşturulan şifre" : "🔓 Çözülen mesaj";
+    output.innerHTML = label + " (Anahtar: <i>" + key + "</i>): <b>" + result + "</b>";
+}
+
+function atbashTR(text){
+    let n = trAlphabet.length;
+    let result = '';
+    for(let ch of text){
+        let idxU = trAlphabet.indexOf(ch);
+        let idxL = trAlphabetLower.indexOf(ch);
+        if(idxU !== -1) result += trAlphabet[n - 1 - idxU];
+        else if(idxL !== -1) result += trAlphabetLower[n - 1 - idxL];
+        else result += ch;
+    }
+    return result;
+}
+
+function a1z29encode(text){
+    let result = [];
+    for(let ch of text){
+        if(ch === ' '){ result.push(' '); continue; }
+        let idxU = trAlphabet.indexOf(ch.toUpperCase());
+        if(idxU !== -1) result.push(idxU + 1);
+    }
+    // Boşlukları koruyarak tire ile birleştir
+    return text.split(' ').map(word => {
+        return Array.from(word).filter(c => trAlphabet.includes(c.toUpperCase()))
+            .map(c => trAlphabet.indexOf(c.toUpperCase()) + 1)
+            .join('-');
+    }).join(' ');
+}
+
+function a1z29decode(text){
+    return text.split(' ').map(word => {
+        return word.split('-').map(num => {
+            let n = parseInt(num);
+            if(isNaN(n) || n === 0) return '';
+            n = ((n - 1) % 29) + 1;
+            return trAlphabet[n - 1];
+        }).join('');
+    }).join(' ');
+}
+
+function caesarTR(text, shift, mode){
+    let direction = (mode === 'encode') ? shift : -shift;
+    let n = trAlphabet.length;
+    let result = '';
+    for(let ch of text){
+        let idxU = trAlphabet.indexOf(ch);
+        let idxL = trAlphabetLower.indexOf(ch);
+        if(idxU !== -1) result += trAlphabet[((idxU + direction) % n + n) % n];
+        else if(idxL !== -1) result += trAlphabetLower[((idxL + direction) % n + n) % n];
+        else result += ch;
+    }
+    return result;
+}
+
+function applyCaesarTR(mode){
+    let input = document.getElementById("cipherTextTR").value;
+    let shift = parseInt(document.getElementById("shiftValueTR").value);
+    let output = document.getElementById("outputTR");
+    if(!shift || shift < 1 || shift > 28){ output.innerText = "Geçerli S değeri gir (1-28)."; return; }
+    if(input.trim() === ""){ output.innerText = "Mesaj gir."; return; }
+    let result = caesarTR(input, shift, mode);
+    let label = (mode === 'encode') ? "🔒 Oluşturulan şifre" : "🔓 Çözülen mesaj";
+    output.innerHTML = label + " (S=" + shift + "): <b>" + result + "</b>";
+}
+
+// ── Polybius ver.:TR ──────────────────────────────────────
+// 5x6 kare: 29 Türkçe harf + 1 boş hücre
+const trSquare = [
+    ['A','B','C','Ç','D','E'],
+    ['F','G','Ğ','H','I','İ'],
+    ['J','K','L','M','N','O'],
+    ['Ö','P','R','S','Ş','T'],
+    ['U','Ü','V','Y','Z','']
+];
+const trSquareLower = trSquare.map(row => row.map(c => c.toLowerCase()));
+
+function trSquareFind(ch){
+    let cu = ch.toUpperCase();
+    for(let r=0;r<5;r++) for(let c=0;c<6;c++)
+        if(trSquare[r][c]===cu) return [r,c];
+    return null;
+}
+
+function selectPolybiusMethodTR(method){
+    document.getElementById("polybiusBasicAreaTR").style.display = "none";
+    document.getElementById("polybiusMethod1AreaTR").style.display = "none";
+    document.getElementById("polybiusBifidAreaTR").style.display = "none";
+    document.getElementById("polybiusMethod3AreaTR").style.display = "none";
+    document.getElementById("polybiusAreaTR").style.display = "block";
+    document.getElementById("polybiusGuideTR").style.display = "block";
+    if(method==='basic') document.getElementById("polybiusBasicAreaTR").style.display = "block";
+    else if(method==='method1') document.getElementById("polybiusMethod1AreaTR").style.display = "block";
+    else if(method==='bifid') document.getElementById("polybiusBifidAreaTR").style.display = "block";
+    else if(method==='method3') document.getElementById("polybiusMethod3AreaTR").style.display = "block";
+    document.getElementById("outputTR").innerText = "İşlem seç.";
+}
+
+// Temel: harf ↔ koordinat
+function polybiusEncodeTR(text, swapped){
+    return text.toUpperCase().split(/\s+/).map(word => {
+        return Array.from(word).map(c => {
+            let pos = trSquareFind(c);
+            if(!pos) return null;
+            return swapped ? (pos[1]+1)+""+(pos[0]+1) : (pos[0]+1)+""+(pos[1]+1);
+        }).filter(x=>x!==null).join("-");
+    }).join(" ");
+}
+
+function polybiusDecodeTR(text, swapped){
+    return text.trim().split(/\s+/).map(word => {
+        return word.split("-").map(pair => {
+            if(!/^\d{2}$/.test(pair)) return "";
+            let a=parseInt(pair[0])-1, b=parseInt(pair[1])-1;
+            let r=swapped?b:a, c=swapped?a:b;
+            if(r<0||r>4||c<0||c>5) return "?";
+            return trSquare[r][c] || "?";
+        }).join("");
+    }).join(" ");
+}
+
+function applyPolybiusTR(mode){
+    let cleanInput = document.getElementById("cipherTextTR").value.trim();
+    let output = document.getElementById("outputTR");
+    if(mode==='encode'){
+        let result = polybiusEncodeTR(cleanInput, false);
+        output.innerHTML = "🔒 Polybius ver.:TR şifresi: <b>"+result+"</b><br><br>✔ Şifre oluşturuldu.";
+    } else {
+        let result = polybiusDecodeTR(cleanInput, false);
+        output.innerHTML = "🔓 Polybius ver.:TR çözümü: <b>"+result+"</b><br><br>✔ Mesaj çözüldü.";
+    }
+}
+
+// Yöntem 1: satır/sütun kaydırma
+function applyPolybiusMethod1TR(mode){
+    let cleanInput = document.getElementById("cipherTextTR").value.trim();
+    let shift = parseInt(document.getElementById("polybiusShiftTR").value);
+    let output = document.getElementById("outputTR");
+    if(!shift||shift<1||shift>4){ output.innerText = "Geçerli S değeri gir (1-4)."; return; }
+    let result = cleanInput.toUpperCase().replace(/./g, function(c){
+        let pos = trSquareFind(c);
+        if(!pos) return c;
+        let [r,col] = pos;
+        let nr = mode==='encode' ? (r+shift)%5 : (r-shift+5)%5;
+        return trSquare[nr][col] || c;
+    });
+    let label = mode==='encode' ? "🔒 Oluşturulan şifre" : "🔓 Çözülen mesaj";
+    output.innerHTML = label+" (Yöntem 1, S="+shift+") (-"+shift+"): <b>"+result+"</b>";
+}
+
+// Yöntem 2: Bifid
+function applyBifidTR(mode){
+    let cleanInput = document.getElementById("cipherTextTR").value.trim();
+    let output = document.getElementById("outputTR");
+    let letters = Array.from(cleanInput.toUpperCase()).filter(c => trSquareFind(c));
+    let result = '';
+    if(mode==='encode'){
+        let rows=[], cols=[];
+        for(let ch of letters){ let [r,c]=trSquareFind(ch); rows.push(r+1); cols.push(c+1); }
+        let flat=[...rows,...cols];
+        for(let i=0;i<flat.length;i+=2){
+            let r=flat[i]-1, c=flat[i+1]-1;
+            if(r>=0&&r<5&&c>=0&&c<6) result+=trSquare[r][c]||'?';
+        }
+    } else {
+        let n=letters.length, combined=[];
+        for(let ch of letters){ let [r,c]=trSquareFind(ch); combined.push(r+1,c+1); }
+        let rows=combined.slice(0,n), cols=combined.slice(n);
+        for(let i=0;i<n;i++){
+            let r=rows[i]-1, c=cols[i]-1;
+            result+=trSquare[r][c]||'?';
+        }
+    }
+    let label = mode==='encode' ? "🔒 Oluşturulan şifre" : "🔓 Çözülen mesaj";
+    output.innerHTML = label+" (Bifid ver.:TR) (xS): <b>"+result+"</b>";
+}
+
+// Yöntem 3: Bifid + Kaydırma
+function applyMethod3TR(mode){
+    let cleanInput = document.getElementById("cipherTextTR").value.trim();
+    let shift = parseInt(document.getElementById("method3ShiftTR").value);
+    let output = document.getElementById("outputTR");
+    if(!shift||shift<1){ output.innerText = "Geçerli S değeri gir."; return; }
+
+    let letters = Array.from(cleanInput.toUpperCase()).filter(c => trSquareFind(c));
+
+    if(mode==='encode'){
+        let rows=[], cols=[];
+        for(let ch of letters){ let [r,c]=trSquareFind(ch); rows.push(r+1); cols.push(c+1); }
+        let flat=[...rows,...cols];
+        let digits = flat.join('');
+        let s=shift%digits.length;
+        let shifted=digits.slice(s)+digits.slice(0,s);
+        let result='';
+        for(let i=0;i<shifted.length;i+=2){
+            let r=parseInt(shifted[i])-1, c=parseInt(shifted[i+1])-1;
+            if(r>=0&&r<5&&c>=0&&c<6) result+=trSquare[r][c]||'';
+        }
+        output.innerHTML = "🔒 Yöntem 3 ver.:TR (S="+shift+") (½"+shift+"): <b>"+result+"</b>";
+    } else {
+        let digits='';
+        for(let ch of letters){ let [r,c]=trSquareFind(ch); digits+=(r+1)+""+(c+1); }
+        let s=shift%digits.length;
+        let unshifted=digits.slice(digits.length-s)+digits.slice(0,digits.length-s);
+        let n=letters.length, flat=Array.from(unshifted).map(Number);
+        let rows=flat.slice(0,n), cols=flat.slice(n);
+        let result='';
+        for(let i=0;i<n;i++) result+=trSquare[rows[i]-1]?.[cols[i]-1]||'';
+        output.innerHTML = "🔓 Yöntem 3 ver.:TR çözümü (S="+shift+") (½"+shift+"): <b>"+result+"</b>";
+    }
+}
+
+
+
+let isTurkish = false;
+
+function toggleMode(){
+    isTurkish = !isTurkish;
+    document.getElementById("englishScreen").style.display = isTurkish ? "none" : "block";
+    document.getElementById("turkishScreen").style.display = isTurkish ? "block" : "none";
+    document.getElementById("glBtn").style.display = isTurkish ? "none" : "block";
+    document.getElementById("toggleBtn").innerHTML = isTurkish ? "🇬🇧" : "🇹🇷";
+    document.getElementById("toggleBtn").title = isTurkish ? "İngilizce alfabeye geç" : "Türkçe alfabeye geç";
+}
+
+
+
+const dictionary = ["ve","bir","bu","için","olan","gibi","çok","daha","merhaba","selam","evet","hayır","hello","world"];
+
+function isMeaningful(text){
+    let words = text.toLowerCase().split(/\s+/);
+    return words.some(w => dictionary.includes(w));
+}
+
+function isLettersOnly(text){
+    return /^[A-Za-zğ\s]+$/.test(text);
+}
+
+function isNumbersOnly(text){
+    return /^[0-9\s\-]+$/.test(text);
+}
+
+function atbash(text){
+    return text.replace(/[A-Za-z]/g, function(c){
+        let base = c === c.toUpperCase() ? 65 : 97;
+        return String.fromCharCode(base + (25 - (c.charCodeAt(0) - base)));
+    });
+}
+
+function a1z26(text){
+    return text.split(" ").map(word => {
+        return word.split("-").map(num => {
+            let n = parseInt(num);
+            if(isNaN(n) || n === 0) return "";
+            n = ((n - 1) % 26) + 1; // 26'dan büyükse modulo uygula
+            return String.fromCharCode(64 + n);
+        }).join("");
+    }).join(" ");
+}
+
+function caesar(text, shift, mode){
+    let direction = (mode === 'encode') ? shift : -shift;
+    return text.replace(/[A-Za-z]/g, function(c){
+        let base = c === c.toUpperCase() ? 65 : 97;
+        return String.fromCharCode((c.charCodeAt(0) - base + direction + 26) % 26 + base);
+    });
+}
+
+function vigenere(text, key, mode){
+    key = key.toLowerCase().replace(/[^a-z]/g, "");
+    if(key.length === 0) return null;
+    let keyIndex = 0;
+    return text.replace(/[A-Za-z]/g, function(c){
+        let base = c === c.toUpperCase() ? 65 : 97;
+        let shift = key.charCodeAt(keyIndex % key.length) - 97;
+        if(mode === 'decode') shift = -shift;
+        keyIndex++;
+        return String.fromCharCode((c.charCodeAt(0) - base + shift + 26) % 26 + base);
+    });
+}
+
+function hideAll(){
+    document.getElementById("shiftArea").style.display = "none";
+    document.getElementById("vigenereArea").style.display = "none";
+    document.getElementById("polybiusArea").style.display = "none";
+    document.getElementById("polybiusBasicArea").style.display = "none";
+    document.getElementById("polybiusMethod1Area").style.display = "none";
+    document.getElementById("polybiusBifidArea").style.display = "none";
+    document.getElementById("polybiusMethod3Area").style.display = "none";
+    document.getElementById("polybiusGuide").style.display = "none";
+    document.getElementById("atbashGuide").style.display = "none";
+    document.getElementById("caesarGuide").style.display = "none";
+    document.getElementById("vigenereGuide").style.display = "none";
+    document.getElementById("a1z26Guide").style.display = "none";
+    document.getElementById("methodArea").style.display = "none";
+}
+
+function startProcess(){
+    let input = document.getElementById("cipherText").value.trim();
+    let output = document.getElementById("output");
+
+    hideAll();
+
+    if(input === ""){
+        output.innerText = T("Mesaj gir.","Enter a message.");
+        return;
+    }
+
+    if(isNumbersOnly(input)){
+        let result = a1z26(input);
+        output.innerHTML = "" + T("🔢 A1Z26 sonucu: ","🔢 A1Z26 result: ") + "<b>" + result + "</b><br><br>" + T("✔ Mesaj çözüldü.","✔ Message decoded.") + "";
+        return;
+    }
+
+    output.innerText = "";
+    document.getElementById("methodArea").style.display = "block";
+}
+
+function selectMethod(method){
+    let input = document.getElementById("cipherText").value.trim();
+    let output = document.getElementById("output");
+
+    hideAll();
+
+    if(method === 'atbash'){
+        let result = atbash(input);
+        output.innerHTML = "" + T("🔁 Atbash sonucu: ","🔁 Atbash result: ") + "<b>" + result + "</b><br><br>" +
+            (isMeaningful(result) ? T("✔ Anlamlı mesaj bulundu.","✔ Meaningful message found.") : "");
+        document.getElementById("atbashGuide").style.display = "block";
+
+    } else if(method === 'a1z26'){
+        if(!isNumbersOnly(input)){
+            output.innerText = T("A1Z26 için sadece sayı ve tire gir.","For A1Z26, enter only numbers and hyphens.");
+            return;
+        }
+        let result = a1z26(input);
+        output.innerHTML = "" + T("🔢 A1Z26 sonucu: ","🔢 A1Z26 result: ") + "<b>" + result + "</b><br><br>" + T("✔ Mesaj çözüldü.","✔ Message decoded.") + "";
+        document.getElementById("a1z26Guide").style.display = "block";
+
+    } else if(method === 'a1z26encode'){
+        let words = input.split(/\s+/);
+        let result = words.map(word => {
+            return Array.from(word).filter(c => /[A-Za-z]/.test(c))
+                .map(c => c.toUpperCase().charCodeAt(0) - 64)
+                .join("-");
+        }).join(" ");
+        output.innerHTML = "" + T("🔢 A1Z26 sonucu: ","🔢 A1Z26 result: ") + "<b>" + result + "</b><br><br>" + T("✔ Şifre oluşturuldu.","✔ Cipher created.") + "";
+        document.getElementById("a1z26Guide").style.display = "block";
+
+    } else if(method === 'polybius'){
+        document.getElementById("polybiusArea").style.display = "block";
+        document.getElementById("polybiusGuide").style.display = "block";
+        output.innerText = T("Polybius yöntemini seç.","Choose a Polybius method.");
+
+    } else if(method === 'caesar'){
+        document.getElementById("shiftArea").style.display = "block";
+        document.getElementById("caesarGuide").style.display = "block";
+        output.innerText = T("S değerini gir ve işlem seç.","Enter the S value and choose an action.");
+
+    } else if(method === 'vigenere'){
+        document.getElementById("vigenereArea").style.display = "block";
+        document.getElementById("vigenereGuide").style.display = "block";
+        output.innerText = T("Anahtar kelimeyi gir ve işlem seç.","Enter the keyword and choose an action.");
+    }
+}
+
+function applyCaesar(mode){
+    let input = document.getElementById("cipherText").value.trim();
+    let shift = parseInt(document.getElementById("shiftValue").value);
+    let output = document.getElementById("output");
+
+    if(!shift || shift < 1 || shift > 25){
+        output.innerText = T("Geçerli S değeri gir (1-25).","Enter a valid S value (1-25).");
+        return;
+    }
+
+    let result = caesar(input, shift, mode);
+    let label = (mode === 'encode') ? T("🔒 Oluşturulan şifre","🔒 Encoded text") : T("🔓 Çözülen mesaj","🔓 Decoded message");
+    output.innerHTML = label + " (S=" + shift + "): <b>" + result + "</b>";
+}
+
+function applyVigenere(mode){
+    let input = document.getElementById("cipherText").value.trim();
+    let key = document.getElementById("vigenereKey").value.trim();
+    let output = document.getElementById("output");
+
+    if(key === ""){
+        output.innerText = T("Anahtar kelime gir.","Enter a keyword.");
+        return;
+    }
+    if(!isLettersOnly(key)){
+        output.innerText = T("Anahtar kelime sadece harf içermeli.","Keyword must contain letters only.");
+        return;
+    }
+
+    let result = vigenere(input, key, mode);
+    if(result === null){
+        output.innerText = T("Geçerli bir anahtar kelime gir.","Enter a valid keyword.");
+        return;
+    }
+
+    let label = (mode === 'encode') ? T("🔒 Oluşturulan şifre","🔒 Encoded text") : T("🔓 Çözülen mesaj","🔓 Decoded message");
+    output.innerHTML = label + " " + T("(Anahtar: ","(Key: ") + "<i>" + key + "</i>): <b>" + result + "</b>";
+}
+
+function selectPolybiusMethod(method){
+    document.getElementById("polybiusBasicArea").style.display = "none";
+    document.getElementById("polybiusMethod1Area").style.display = "none";
+    document.getElementById("polybiusBifidArea").style.display = "none";
+    document.getElementById("polybiusMethod3Area").style.display = "none";
+    document.getElementById("polybiusArea").style.display = "block";
+    document.getElementById("polybiusGuide").style.display = "block";
+
+    if(method === 'basic'){
+        document.getElementById("polybiusBasicArea").style.display = "block";
+    } else if(method === 'method1'){
+        document.getElementById("polybiusMethod1Area").style.display = "block";
+    } else if(method === 'bifid'){
+        document.getElementById("polybiusBifidArea").style.display = "block";
+    } else if(method === 'method3'){
+        document.getElementById("polybiusMethod3Area").style.display = "block";
+    }
+    document.getElementById("output").innerText = T("İşlem seç.","Choose an action.");
+}
+
+// Yöntem 1: Her harf, Polybius karesinde aynı sütunda bir alt satırdaki harfle değiştirilir
+function applyPolybiusMethod1(mode){
+    let input = document.getElementById("cipherText").value.trim();
+    let shift = parseInt(document.getElementById("polybiusShift").value);
+    let output = document.getElementById("output");
+
+    if(!shift || shift < 1 || shift > 4){
+        output.innerText = T("Geçerli S değeri gir (1-4).","Enter a valid S value (1-4).");
+        return;
+    }
+
+    if(!isLettersOnly(input)){
+        output.innerText = T("Sadece harf gir (veya ğ ile başlayarak sütun modu kullan).","Enter letters only (or start with ğ for column mode).");
+        return;
+    }
+
+    // Sonda ğ varsa baştaki ğ yok sayılır
+    let trailingGh = input.endsWith('ğ') || input.endsWith('Ğ');
+    let hasLeadingGh = input.startsWith('ğ') || input.startsWith('Ğ');
+    let columnMode = hasLeadingGh && !trailingGh;
+    let cleanInput = hasLeadingGh ? input.slice(1).trim() : input;
+    if(trailingGh) cleanInput = cleanInput.slice(0, -1).trim();
+    let modeLabel = columnMode ? T("sütun","column") : T("satır","row");
+
+    let result = cleanInput.toUpperCase().replace(/[A-Z]/g, function(c){
+        if(c === 'J') c = 'I';
+        for(let r = 0; r < 5; r++){
+            for(let col = 0; col < 5; col++){
+                if(polybiusSquare[r][col] === c){
+                    if(columnMode){
+                        // Sütun bazlı kaydırma
+                        let newCol;
+                        if(mode === 'encode'){
+                            newCol = (col + shift) % 5;
+                        } else {
+                            newCol = (col - shift + 5) % 5;
+                        }
+                        return polybiusSquare[r][newCol];
+                    } else {
+                        // Satır bazlı kaydırma
+                        let newRow;
+                        if(mode === 'encode'){
+                            newRow = (r + shift) % 5;
+                        } else {
+                            newRow = (r - shift + 5) % 5;
+                        }
+                        return polybiusSquare[newRow][col];
+                    }
+                }
+            }
+        }
+        return c;
+    });
+
+    let label = (mode === 'encode') ? T("🔒 Oluşturulan şifre","🔒 Encoded text") : T("🔓 Çözülen mesaj","🔓 Decoded message");
+    output.innerHTML = label + " " + T("(Yöntem 1, S=","(Method 1, S=") + "" + shift + ", " + modeLabel + T(" bazlı) (-","-based) (-") + shift + "): <b>" + result + "</b>";
+}
+
+// Yöntem 2: Bifid şifreleme
+function applyBifid(mode){
+    let rawInput = document.getElementById("cipherText").value.trim();
+    let output = document.getElementById("output");
+
+    // Sonda ğ varsa baştaki ğ yok sayılır
+    let trailingGh = rawInput.endsWith('ğ') || rawInput.endsWith('Ğ');
+    let hasLeadingGh = rawInput.startsWith('ğ') || rawInput.startsWith('Ğ');
+    let cleanInput = hasLeadingGh ? rawInput.slice(1).trim() : rawInput;
+    if(trailingGh) cleanInput = cleanInput.slice(0, -1).trim();
+
+    if(!isLettersOnly(cleanInput)){
+        output.innerText = T("Sadece harf gir.","Enter letters only.");
+        return;
+    }
+
+    let input = cleanInput.toUpperCase().replace(/J/g, 'I');
+    let letters = input.replace(/[^A-Z]/g, '');
+    let result = '';
+
+    if(mode === 'encode'){
+        // Her harfin koordinatlarını al
+        let rows = [], cols = [];
+        for(let ch of letters){
+            for(let r = 0; r < 5; r++){
+                for(let c = 0; c < 5; c++){
+                    if(polybiusSquare[r][c] === ch){
+                        rows.push(r);
+                        cols.push(c);
+                    }
+                }
+            }
+        }
+        // Satırları ve sütunları arka arkaya diz, yeni çiftler oluştur
+        let combined = [...rows, ...cols];
+        for(let i = 0; i < combined.length; i += 2){
+            result += polybiusSquare[combined[i]][combined[i+1]];
+        }
+    } else {
+        // Çözme: combined diziyi ikiye böl
+        let n = letters.length;
+        let combined = [];
+        for(let ch of letters){
+            for(let r = 0; r < 5; r++){
+                for(let c = 0; c < 5; c++){
+                    if(polybiusSquare[r][c] === ch){
+                        combined.push(r, c);
+                    }
+                }
+            }
+        }
+        let rows = combined.slice(0, n);
+        let cols = combined.slice(n);
+        for(let i = 0; i < n; i++){
+            result += polybiusSquare[rows[i]][cols[i]];
+        }
+    }
+
+    let label = (mode === 'encode') ? T("🔒 Oluşturulan şifre","🔒 Encoded text") : T("🔓 Çözülen mesaj","🔓 Decoded message");
+    output.innerHTML = label + " (Bifid) (xS): <b>" + result + "</b>";
+}
+
+
+// Sıra: A B C D E F G H I/J K L M N O P Q R S T U V W X Y Z
+// I=24 konumunda, J atlanır, K=25... Z=55
+const polybiusSquare = [
+    ['A','B','C','D','E'],
+    ['F','G','H','I','K'],
+    ['L','M','N','O','P'],
+    ['Q','R','S','T','U'],
+    ['V','W','X','Y','Z']
+];
+
+function polybiusEncode(text, swapped){
+    return text.toUpperCase().split(/\s+/).map(word => {
+        return Array.from(word).filter(c => /[A-Z]/.test(c)).map(c => {
+            if(c === 'J') c = 'I';
+            for(let r = 0; r < 5; r++){
+                for(let col = 0; col < 5; col++){
+                    if(polybiusSquare[r][col] === c){
+                        return swapped ? (col+1)+""+(r+1) : (r+1)+""+(col+1);
+                    }
+                }
+            }
+            return "";
+        }).join("-");
+    }).join(" ");
+}
+
+function polybiusDecode(text, swapped){
+    return text.trim().split(/\s+/).map(word => {
+        return word.split("-").map(pair => {
+            if(!/^\d{2}$/.test(pair)) return "";
+            let a = parseInt(pair[0]) - 1;
+            let b = parseInt(pair[1]) - 1;
+            let r   = swapped ? b : a;
+            let col = swapped ? a : b;
+            if(r < 0 || r > 4 || col < 0 || col > 4) return "?";
+            return polybiusSquare[r][col];
+        }).join("");
+    }).join(" ");
+}
+
+function applyPolybius(mode){
+    let input = document.getElementById("cipherText").value.trim();
+    let output = document.getElementById("output");
+
+    // Sonda ğ varsa baştaki ğ yok sayılır
+    let trailingGh = input.endsWith('ğ') || input.endsWith('Ğ');
+    let hasLeadingGh = input.startsWith('ğ') || input.startsWith('Ğ');
+    let swapped = hasLeadingGh && !trailingGh;
+    let cleanInput = hasLeadingGh ? input.slice(1).trim() : input;
+    if(trailingGh) cleanInput = cleanInput.slice(0, -1).trim();
+    let coordLabel = swapped ? "(y,x)" : "(x,y)";
+
+    if(mode === 'encode'){
+        if(!isLettersOnly(cleanInput)){
+            output.innerText = T("Oluşturmak için sadece harf gir.","Enter letters only to encode.");
+            return;
+        }
+        let result = polybiusEncode(cleanInput, swapped);
+        output.innerHTML = T("🔒 Polybius şifresi ","🔒 Polybius cipher ") + coordLabel + ": <b>" + result + "</b><br><br>" + T("✔ Şifre oluşturuldu.","✔ Cipher created.") + "";
+
+    } else {
+        if(!/^[ğĞ]?[\d\-\s]+$/.test(input)){
+            output.innerText = T("Çözmek için tireli sayı formatı gir (örn: 43-15).","To decode, enter numbers in hyphenated format (e.g. 43-15).");
+            return;
+        }
+        let result = polybiusDecode(cleanInput, swapped);
+        output.innerHTML = T("🔓 Polybius çözümü ","🔓 Polybius decoded ") + coordLabel + ": <b>" + result + "</b><br><br>" + T("✔ Mesaj çözüldü.","✔ Message decoded.") + "";
+    }
+}
+
+function applyMethod3(mode){
+    let rawInput = document.getElementById("cipherText").value.trim();
+    let shift = parseInt(document.getElementById("method3Shift").value);
+    let output = document.getElementById("output");
+
+    if(!shift || shift < 1){
+        output.innerText = T("Geçerli S değeri gir.","Enter a valid S value.");
+        return;
+    }
+
+    // Baştaki ve sondaki ğ sayısını say, sondaki baştakini iptal eder
+    let ghCount = 0;
+    while(rawInput.toLowerCase().startsWith('ğ'.repeat(ghCount + 1))) ghCount++;
+    let trailingGh = 0;
+    while(rawInput.toLowerCase().endsWith('ğ'.repeat(trailingGh + 1))) trailingGh++;
+    ghCount = Math.max(0, ghCount - trailingGh);
+
+    let cleanInput = rawInput.slice(('ğ'.length) * (ghCount + trailingGh > 0 ? ghCount + trailingGh : 0));
+    // Daha sağlıklı: önce baştaki tüm ğ'leri, sonra sondaki tüm ğ'leri at
+    cleanInput = rawInput.replace(/^[ğĞ]+/, '').replace(/[ğĞ]+$/, '').trim();
+
+    let swap1 = ghCount === 1 || ghCount === 3; // 1. aşamada (y,x)
+    let swap2 = ghCount === 2 || ghCount === 3; // 2. aşamada (y,x)
+
+    let modeLabel = '';
+    if(ghCount === 1) modeLabel = T(" [Aşama 1: (y,x)]"," [Stage 1: (y,x)]");
+    else if(ghCount === 2) modeLabel = T(" [Aşama 2: (y,x)]"," [Stage 2: (y,x)]");
+    else if(ghCount === 3) modeLabel = T(" [Her iki aşama: (y,x)]"," [Both stages: (y,x)]");
+
+    if(!isLettersOnly(cleanInput)){
+        output.innerText = T("Sadece harf gir.","Enter letters only.");
+        return;
+    }
+
+    let letters = cleanInput.toUpperCase().replace(/J/g, 'I').replace(/[^A-Z]/g, '');
+
+    // Koordinat çiftini stringe çevir
+    function coordStr(r1, c1, swapped){
+        return swapped ? '' + (c1+1) + (r1+1) : '' + (r1+1) + (c1+1);
+    }
+    // İkili string'den harf
+    function pairToChar(a, b, swapped){
+        let r = swapped ? b-1 : a-1;
+        let c = swapped ? a-1 : b-1;
+        if(r>=0&&r<5&&c>=0&&c<5) return polybiusSquare[r][c];
+        return '';
+    }
+
+    if(mode === 'encode'){
+        // Adım 1: Bifid — rows ve cols (1-bazlı) düz diziye yaz
+        // swap1: koordinatlar (sütun,satır) sırasıyla yazılır
+        let rows=[], cols=[];
+        for(let ch of letters){
+            for(let r=0;r<5;r++) for(let c=0;c<5;c++)
+                if(polybiusSquare[r][c]===ch){ rows.push(r+1); cols.push(c+1); }
+        }
+        let flat = [...rows, ...cols];
+        let digits = swap1
+            ? flat.reduce((acc,_,i,a) => i%2===0 ? acc + a[i+1] + a[i] : acc, '')
+            : flat.join('');
+
+        // Adım 2: Döngüsel sola kaydır
+        let s = shift % digits.length;
+        let shifted = digits.slice(s) + digits.slice(0, s);
+
+        // Adım 3: İkili gruplara böl → harflere çevir (swap2 ile)
+        let finalResult = '';
+        for(let i=0; i<shifted.length; i+=2)
+            finalResult += pairToChar(parseInt(shifted[i]), parseInt(shifted[i+1]), swap2);
+
+        output.innerHTML = T("🔒 Yöntem 3 şifresi (S=","🔒 Method 3 cipher (S=") + shift + ")" + modeLabel + " (½" + shift + "): <b>" + finalResult + "</b>";
+
+    } else {
+        // Adım 1: Şifreli harfleri koordinat dizisine çevir (swap2 ile)
+        let digits = '';
+        for(let ch of letters){
+            for(let r=0;r<5;r++) for(let c=0;c<5;c++)
+                if(polybiusSquare[r][c]===ch) digits += coordStr(r, c, swap2);
+        }
+
+        // Adım 2: Döngüsel sağa kaydır
+        let s = shift % digits.length;
+        let unshifted = digits.slice(digits.length - s) + digits.slice(0, digits.length - s);
+
+        // Adım 3: Düz diziyi rows ve cols olarak ayır, bifid çöz (swap1 ile)
+        let n = letters.length;
+        let flat = Array.from(unshifted).map(Number);
+        let rows, cols;
+        if(swap1){
+            rows = flat.filter((_,i) => i%2===1);
+            cols = flat.filter((_,i) => i%2===0);
+        } else {
+            rows = flat.slice(0, n);
+            cols = flat.slice(n);
+        }
+
+        let finalResult = '';
+        for(let i=0; i<n; i++){
+            let r = rows[i] - 1;
+            let c = cols[i] - 1;
+            if(r>=0&&r<5&&c>=0&&c<5) finalResult += polybiusSquare[r][c];
+        }
+
+        output.innerHTML = T("🔓 Yöntem 3 çözümü (S=","🔓 Method 3 decoded (S=") + shift + ")" + modeLabel + " (½" + shift + "): <b>" + finalResult + "</b>";
+    }
+}
+
+
+
+
+function T(tr,en){return document.body.classList.contains("gl-tr")?tr:en;}
+function applyUILang(){
+    var tr=document.body.classList.contains("gl-tr");
+    document.querySelectorAll("[data-en]").forEach(function(el){
+        if(el.dataset.tr===undefined) el.dataset.tr=el.textContent;
+        el.textContent=tr?el.dataset.tr:el.dataset.en;
+    });
+    document.querySelectorAll("[data-en-ph]").forEach(function(el){
+        if(el.dataset.trPh===undefined) el.dataset.trPh=el.getAttribute("placeholder");
+        el.setAttribute("placeholder",tr?el.dataset.trPh:el.dataset.enPh);
+    });
+}
+function setGuideLang(l){
+    document.body.classList.remove("gl-en","gl-tr");
+    document.body.classList.add("gl-"+l);
+    try{localStorage.setItem("guideLang",l);}catch(e){}
+    applyUILang();
+}
+function toggleGuideLang(){
+    setGuideLang(document.body.classList.contains("gl-en")?"tr":"en");
+}
+var _gl="en"; try{var _s=localStorage.getItem("guideLang"); if(_s==="tr"||_s==="en") _gl=_s;}catch(e){}
+setGuideLang(_gl);
+</script>
+
+</body>
+</html>
