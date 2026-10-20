@@ -16,7 +16,7 @@ A lightweight tool for **encoding and decoding classical ciphers**, with extende
 
 * **Atbash** `!` — mirrors the alphabet (A↔Z, B↔Y…). The same operation encodes and decodes.
 * **Caesar** `?S` — shift by S steps, with separate *Encode* (S forward) and *Decode* (S back) buttons.
-* **Vigenère** `\\\&` — encode and decode with a keyword.
+* **Vigenère** `\&` — encode and decode with a keyword.
 * **A1Z26** `%` — letters ↔ numbers. Use `-` between letters and a space between words (`HELLO` → `8-5-12-12-15`). Numbers above 26 are handled with modulo 26.
 * **Auto-detection** — if the input is only numbers, A1Z26 decoding is applied automatically.
 * **Polybius square** with four methods:
@@ -60,7 +60,7 @@ These are **classical ciphers** made for learning, puzzles, and fun. They are **
 
 * **Atbash** `!` — alfabeyi aynalar (A↔Z, B↔Y…). Aynı işlem hem şifreler hem çözer.
 * **Caesar** `?S` — S adım kaydırma; *Oluştur* (S ileri) ve *Çöz* (S geri) için ayrı butonlar.
-* **Vigenère** `\\\&` — anahtar kelime ile oluşturma ve çözme.
+* **Vigenère** `\&` — anahtar kelime ile oluşturma ve çözme.
 * **A1Z26** `%` — harf ↔ sayı. Harfler arasında `-`, kelimeler arasında boşluk kullanılır (`HELLO` → `8-5-12-12-15`). 26'dan büyük sayılar modulo 26 ile işlenir.
 * **Otomatik algılama** — girilen metin yalnızca sayılardan oluşuyorsa A1Z26 çözümü otomatik uygulanır.
 * **Polybius karesi**, dört yöntemle:
