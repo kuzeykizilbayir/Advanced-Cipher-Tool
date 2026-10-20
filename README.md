@@ -10,6 +10,8 @@
 
 A lightweight tool for **encoding and decoding classical ciphers**, with extended Polybius variants and full Turkish-alphabet support. It is a single HTML file with no dependencies and works completely offline. A Windows desktop version is also available.
 
+🌐 **Try it online:** https://kuzeykizilbayir.github.io/Advanced-Cipher-Tool/
+
 ### Features
 
 * **Atbash** `(!)` — mirrors the alphabet (A↔Z, B↔Y…). The same operation encodes and decodes.
@@ -51,6 +53,8 @@ These are **classical ciphers** made for learning, puzzles, and fun. They are **
 ## 🇹🇷 Türkçe
 
 **Klasik şifreleme yöntemlerini oluşturmak ve çözmek** için hazırlanmış hafif bir araç. Genişletilmiş Polybius varyasyonları ve tam Türk alfabesi desteği içerir. Tek bir HTML dosyasından oluşur, hiçbir bağımlılığı yoktur ve tamamen internetsiz çalışır. Windows masaüstü sürümü de mevcuttur.
+
+🌐 **Online dene:** https://kuzeykizilbayir.github.io/Advanced-Cipher-Tool/
 
 ### Özellikler
 
